@@ -1,0 +1,142 @@
+!!ExportedWorkflow
+apiVersion: torq.io/v2alpha
+kind: Workflow
+id: 31b9b4e5-698a-4eb4-8b6d-b100c1058a3b
+name: Torq Automation Analyst - XML to JSON - JorgeSR
+trigger:
+  onDemandTrigger:
+    parameterList:
+      parameters: []
+playbook:
+  steps:
+    - name: us-docker.pkg.dev/stackpulse/public/http/request:4.30.0
+      id: get_xml_data
+      env:
+        AUTHORIZATION: None
+        HEADERS: ""
+        METHOD: GET
+        URL: https://hooks.torq.io/v1/webhooks/2893bc2a-8b35-4969-9540-f2ce6c6db146/workflows/63546432-76fc-4447-a7ea-acf8a88e1fad/sync
+      uuid: e9c66303-e699-4a76-b055-6a0b96182595
+      pretty_name: Get XML data
+      options:
+        executor:
+          name: http_request_v_4_30_0
+          env: {}
+          sync: true
+          disable: false
+      manifestId: ee63ad26-cc7c-52b9-8a1d-502da126aec5
+      isPrivate: false
+      isPrivateUrl: true
+      mock_output:
+        enabled: false
+      skip: false
+      retry: {}
+    - name: us-docker.pkg.dev/stackpulse/public/utils/output_utils/to-json-jc:1.3.0
+      id: convert_to_json
+      env:
+        INPUT: '{{ $.get_xml_data.api_object.output }}'
+        INPUT_TYPE: xml
+        UNESCAPE_INPUT: "false"
+      uuid: 143dbe0b-a843-486b-b126-571e93f2cca8
+      pretty_name: Convert to JSON
+      options: {}
+      manifestId: bbb7d7e0-dcf6-59f5-8093-e4f035936f5a
+      isPrivate: false
+      isPrivateUrl: true
+      mock_output:
+        enabled: false
+      skip: false
+      retry: {}
+    - name: us-docker.pkg.dev/stackpulse/public/utils/array_utils/array-filter:2.5.0
+      id: filter_year_2000
+      env:
+        FIELD_PATH: publish_date
+        FILTER_ARG: "2000"
+        FILTER_FUNC: Contains
+        INPUT: '{{ $.convert_to_json.output.catalog.book }}'
+      uuid: 4a827178-8ebe-452a-bede-962d1316abc5
+      pretty_name: Filter year 2000
+      options:
+        executor:
+          name: utils_infrastructure_v_1_41_0
+          env: {}
+          sync: true
+          disable: false
+      documentationUrl: https://learn.torq.io/docs/array-utilities#filter-array
+      manifestId: 0b61cd95-a273-584c-99c8-03239b28ea6b
+      isPrivate: false
+      mock_output:
+        enabled: false
+      skip: false
+      retry: {}
+    - name: us-docker.pkg.dev/stackpulse/public/torq_data_transformation/json-transformation-tool:4.1.5
+      id: filter_only_prices
+      env:
+        INPUT_JSON: '{{ $.filter_year_2000.result }}'
+        TRANSFORMATION_PLAN: '[{"tool":"jq","command":".[] | .price","prompt":"for each object, get me only price in a single result array","modified":false}]'
+      uuid: 40d28ccf-57b5-4dfa-9471-9e1abc72061a
+      pretty_name: Filter only prices
+      options:
+        executor:
+          name: utils_infrastructure_v_1_43_0
+          env: {}
+          sync: true
+          disable: false
+      manifestId: 474ca7d8-2d19-502c-80fc-472768c97bef
+      isPrivate: false
+      mock_output:
+        enabled: false
+      skip: false
+      retry: {}
+    - name: us-docker.pkg.dev/stackpulse/public/utils/array_utils/rollup-numeric-array:1.3.0
+      id: prices_sum
+      env:
+        INPUT: '{{ $.filter_only_prices.output }}'
+        ROLLUP_FUNCTION: Sum
+      uuid: a77bce1d-b7d1-4ecf-82b5-b3a18e8734d1
+      pretty_name: Prices SUM
+      options:
+        executor:
+          name: utils_infrastructure_v_1_41_0
+          env: {}
+          sync: true
+          disable: false
+      documentationUrl: https://learn.torq.io/docs/array-utilities#rollup-numeric-array
+      manifestId: 1bc1c814-f6b7-587e-a454-780bb5fc4025
+      isPrivate: false
+      mock_output:
+        enabled: false
+      skip: false
+      retry: {}
+    - exit:
+        success: "true"
+        pretty_name: Exit
+        output: '{ {{ $.prices_sum.output }}}'
+        uuid: ff7b1993-ccf3-4a01-a0e1-03806752ae83
+  annotations:
+    - uuid: 776c9975-d318-41cc-b86d-59a192f60309
+      x: -615
+      "y": 101
+      width: 553
+      height: 366
+      content: '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"image","attrs":{"src":"https://i.imgur.com/UhdSFgL.png","alt":null,"title":null}}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"}],"text":"Instructions:"}]},{"type":"paragraph","content":[{"type":"text","text":"While visiting your favorite local book store, you were approached by the owners asking for your help. They need to find the number of books sold in the year 2000, and calculate the price of the books sold in the same year."}]},{"type":"paragraph","content":[{"type":"text","text":"Their IT team has provided their book cost information data, it can be found as XML at "},{"type":"text","marks":[{"type":"link","attrs":{"href":"https://hooks.torq.io/v1/webhooks/2893bc2a-8b35-4969-9540-f2ce6c6db146/workflows/63546432-76fc-4447-a7ea-acf8a88e1fad/sync","target":"_blank","class":null}}],"text":"this Address."}]},{"type":"orderedList","attrs":{"start":1},"content":[{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","marks":[{"type":"italic"}],"text":"Find the number of books sold in the year 2000."}]}]},{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","marks":[{"type":"italic"}],"text":"Calculate the price of the books sold in the same year."}]}]}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"}],"text":"Additional Information:"}]},{"type":"paragraph","content":[{"type":"text","text":"You can utilize any steps from Torq to find the result."}]},{"type":"paragraph","content":[{"type":"text","text":"Here are some steps that you may find useful to complete the task:"}]},{"type":"bulletList","content":[{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"HTTP Step (can be copy pasted from provided cURL command)"}]}]},{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"Convert to JSON Utilities"}]}]},{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"Filter Array based on specific value"}]}]},{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"Numeric Utilities such as Rollup Numeric Array from array of numeric values or Solve Math Equation "}]}]}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"}],"text":"Goal:"}]},{"type":"paragraph","content":[{"type":"text","text":"Find the magic sum result and price in order to answer the following question in the quiz."}]}]}'
+    - uuid: 82b973bd-7d56-4f4d-bef6-9b7dd237df70
+      x: 333
+      "y": 100
+      width: 336
+      height: 482
+      attachedStepId: ff7b1993-ccf3-4a01-a0e1-03806752ae83
+      attachedDistance:
+        x: -333
+        "y": 30
+      content: '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"image","attrs":{"src":"https://i.imgur.com/BIpR1Q5.png","alt":null,"title":null,"width":"60%","height":null,"isDraggable":true,"isResizable":null}}]},{"type":"paragraph","content":[{"type":"text","text":"Try to copy paste the curl command into an empty square.  This will create a Torq step with the details from the Curl command."},{"type":"hardBreak"},{"type":"hardBreak"},{"type":"text","text":"The URL path returns book price information as XML."},{"type":"hardBreak"},{"type":"hardBreak"},{"type":"text","marks":[{"type":"italic"}],"text":"curl "},{"type":"text","marks":[{"type":"link","attrs":{"href":"https://hooks.torq.io/v1/webhooks/2893bc2a-8b35-4969-9540-f2ce6c6db146/workflows/63546432-76fc-4447-a7ea-acf8a88e1fad/sync","target":"_blank","rel":"noopener noreferrer nofollow","class":null}},{"type":"italic"}],"text":"https://hooks.torq.io/v1/webhooks/2893bc2a-8b35-4969-9540-f2ce6c6db146/workflows/63546432-76fc-4447-a7ea-acf8a88e1fad/sync"}]}]}'
+    - uuid: b5048d9b-633c-4a41-86be-5997cdc99ee6
+      x: 334
+      "y": 628
+      width: 336
+      height: 414
+      content: '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"image","attrs":{"src":"https://i.imgur.com/BIpR1Q5.png","alt":null,"title":null}}]},{"type":"paragraph","content":[{"type":"text","text":"In case you are stuck, try to work in JSON format and filter for the required data with and Array Utils (Filter Array, Extract Field etc..) or Loop Util and an If condition over each book value, based on the condition you need to gather the information for."}]}]}'
+  output_schema: '{}'
+  tags:
+    - Torq Academy - Analyst
+root: true

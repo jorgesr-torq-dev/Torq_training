@@ -1,0 +1,98 @@
+!!ExportedWorkflow
+apiVersion: torq.io/v2alpha
+kind: Workflow
+id: a9c08429-84a3-42c5-9766-be050afd17fa
+name: Q1 - Generate token & HTTP GET data - JorgeSR
+trigger:
+  onDemandTrigger:
+    parameterList:
+      parameters: []
+playbook:
+  steps:
+    - name: us-docker.pkg.dev/stackpulse/public/http/request:4.30.0
+      id: generate_access_token
+      env:
+        AUTHORIZATION: None
+        BODY: '{}'
+        CONTENT_TYPE: application/json; charset=utf-8
+        HEADERS: ""
+        METHOD: POST
+        URL: https://hooks.torq.io/v1/webhooks/8f538045-b579-4d5e-b4f6-f59e176ef0c6/workflows/3ba84047-9c01-478b-a51a-1622b012d19e/sync
+      uuid: 528888e1-dc67-4088-a356-fd53e1d5ab0b
+      pretty_name: Generate Access Token
+      options:
+        executor:
+          name: http_request_v_4_30_0
+          env: {}
+          sync: true
+          disable: false
+      manifestId: ee63ad26-cc7c-52b9-8a1d-502da126aec5
+      isPrivate: false
+      isPrivateUrl: true
+      mock_output:
+        enabled: false
+      skip: false
+      retry: {}
+    - name: us-docker.pkg.dev/stackpulse/public/http/request:4.30.0
+      id: get_quiz_information
+      env:
+        AUTHORIZATION: Bearer
+        HEADERS: ""
+        METHOD: GET
+        TOKEN: '{{ $.generate_access_token.api_object.bearer_token }}'
+        URL: https://hooks.torq.io/v1/webhooks/8f538045-b579-4d5e-b4f6-f59e176ef0c6/workflows/3ba84047-9c01-478b-a51a-1622b012d19e/sync
+      uuid: c7babb41-9445-4e94-949b-e8e14e64b5b4
+      pretty_name: Get Quiz Information
+      options:
+        executor:
+          name: http_request_v_4_30_0
+          env: {}
+          sync: true
+          disable: false
+      manifestId: ee63ad26-cc7c-52b9-8a1d-502da126aec5
+      isPrivate: false
+      isPrivateUrl: true
+      mock_output:
+        enabled: false
+      skip: false
+      retry: {}
+    - exit:
+        success: "true"
+        pretty_name: Exit
+        output: '{"Quiz Key": "{{ $.get_quiz_information.api_object.''Quiz Key'' }}"}'
+        uuid: ff7b1993-ccf3-4a01-a0e1-03806752ae83
+  annotations:
+    - uuid: 776c9975-d318-41cc-b86d-59a192f60309
+      x: -574
+      "y": -145
+      width: 553
+      height: 366
+      attachedStepId: ff7b1993-ccf3-4a01-a0e1-03806752ae83
+      attachedDistance:
+        x: 574
+        "y": 276
+      content: '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"image","attrs":{"src":"https://i.imgur.com/owyJus2.png","alt":null,"title":null,"width":"60%","height":null,"isDraggable":true,"isResizable":null}}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"}],"text":"Instructions:"}]},{"type":"paragraph","content":[{"type":"text","text":"You have been provided with the latest cool product to hit the market and want to use it with automation in your workflow. "}]},{"type":"paragraph","content":[{"type":"text","text":"You can add it right away with Torq to use as part of your technology stack."}]},{"type":"paragraph","content":[{"type":"text","text":"All that you need is its API access information to authenticate and make a call for the Quiz information."}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"}],"text":"Additional Information:"},{"type":"hardBreak"},{"type":"hardBreak"},{"type":"text","marks":[{"type":"bold"},{"type":"underline"}],"text":"Generate Access Token"},{"type":"hardBreak","marks":[{"type":"underline"}]},{"type":"text","marks":[{"type":"bold"}],"text":"HTTP POST"},{"type":"text","text":" to  API "},{"type":"text","marks":[{"type":"link","attrs":{"href":"https://hooks.torq.io/v1/webhooks/8f538045-b579-4d5e-b4f6-f59e176ef0c6/workflows/3ba84047-9c01-478b-a51a-1622b012d19e/sync","target":"_blank","rel":"noopener noreferrer nofollow","class":null}}],"text":"Endpoint Address"},{"type":"hardBreak"},{"type":"text","marks":[{"type":"bold"}],"text":"Body empty"},{"type":"text","text":" {}"}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"italic"}],"text":"Note: Each token has a 15 minute lifetime.  Generate a new token if needed!"},{"type":"hardBreak"}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"},{"type":"underline"}],"text":"Get Quiz Information:"},{"type":"hardBreak","marks":[{"type":"bold"}]},{"type":"text","marks":[{"type":"bold"}],"text":"HTTP GET"},{"type":"text","text":" to API "},{"type":"text","marks":[{"type":"link","attrs":{"href":"https://hooks.torq.io/v1/webhooks/8f538045-b579-4d5e-b4f6-f59e176ef0c6/workflows/3ba84047-9c01-478b-a51a-1622b012d19e/sync","target":"_blank","rel":"noopener noreferrer nofollow","class":null}}],"text":"Endpoint Address"},{"type":"hardBreak"},{"type":"text","marks":[{"type":"bold"}],"text":"Authorization Header"},{"type":"text","text":" -> Bearer TOKEN"},{"type":"hardBreak"},{"type":"text","marks":[{"type":"bold"}],"text":"Expected output:"},{"type":"text","text":" "},{"type":"text","marks":[{"type":"italic"}],"text":"{  \"Quiz Key\": \"<QUIZ_KEY>\","}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"italic"}],"text":"                                  \"output\": \"<OUTPUT_DESCRIPTION>\" }"}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"}],"text":"Goal:"}]},{"type":"paragraph","content":[{"type":"text","text":"Using the above details, create the required steps to fetch the quiz key from the new API."}]}]}'
+    - uuid: 82b973bd-7d56-4f4d-bef6-9b7dd237df70
+      x: 300
+      "y": -147
+      width: 336
+      height: 515
+      attachedStepId: ff7b1993-ccf3-4a01-a0e1-03806752ae83
+      attachedDistance:
+        x: -300
+        "y": 278
+      content: '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"image","attrs":{"src":"https://i.imgur.com/BIpR1Q5.png","alt":null,"title":null}}]},{"type":"paragraph","content":[{"type":"text","text":"Try to copy paste the curl bash command into an empty square."},{"type":"hardBreak"},{"type":"hardBreak"},{"type":"text","text":"The HTTP POST request asks to generate an access token to use a 3rd party service.  "}]},{"type":"paragraph","content":[{"type":"hardBreak"},{"type":"text","marks":[{"type":"italic"}],"text":"curl -X POST -H \"Content-Type: application/json\" -d \"{}\" "},{"type":"text","marks":[{"type":"link","attrs":{"href":"https://hooks.torq.io/v1/webhooks/8f538045-b579-4d5e-b4f6-f59e176ef0c6/workflows/3ba84047-9c01-478b-a51a-1622b012d19e/sync","target":"_blank","class":null}},{"type":"italic"}],"text":"https://hooks.torq.io/v1/webhooks/8f538045-b579-4d5e-b4f6-f59e176ef0c6/workflows/3ba84047-9c01-478b-a51a-1622b012d19e/sync"}]}]}'
+    - uuid: 68f097b6-e331-4a56-b1c3-0cbf3b804e0f
+      x: 300
+      "y": 404
+      width: 336
+      height: 430
+      attachedStepId: ff7b1993-ccf3-4a01-a0e1-03806752ae83
+      attachedDistance:
+        x: -300
+        "y": -273
+      content: '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"image","attrs":{"src":"https://i.imgur.com/BIpR1Q5.png","alt":null,"title":null}}]},{"type":"paragraph","content":[{"type":"text","text":"The auth token might be used in different ways, in this example it is a "},{"type":"text","marks":[{"type":"bold"}],"text":"bearer"},{"type":"text","text":" token type "},{"type":"text","marks":[{"type":"bold"}],"text":"authorization"},{"type":"text","text":" header."}]},{"type":"paragraph","content":[{"type":"text","text":"Use the provided token to get the quiz answer from the same URL endpoint address, but this time with authenticated access."}]}]}'
+  output_schema: '{}'
+  tags:
+    - Torq Academy - Analyst
+root: true
