@@ -1,0 +1,233 @@
+!!ExportedWorkflow
+apiVersion: torq.io/v2alpha
+kind: Workflow
+id: d2987108-ab93-4f8d-aeef-768501bf49bb
+name: Torq Automation Expert - Pagination JorgeSR
+trigger:
+  onDemandTrigger:
+    parameterList:
+      parameters: []
+playbook:
+  steps:
+    - name: us-docker.pkg.dev/stackpulse/public/http/request:4.30.0
+      id: generate_access_token
+      env:
+        AUTHORIZATION: None
+        BODY: |-
+          {
+            "action":"start"
+          }
+        CONTENT_TYPE: application/json; charset=utf-8
+        HEADERS: ""
+        METHOD: POST
+        URL: https://hooks.torq.io/v1/webhooks/92634ec9-22cb-48e9-93a9-14650ca8c97b/workflows/eb3dfa21-e459-4033-bc2d-f149c30959d1/sync
+      uuid: 8c62ae9f-6015-417d-91e3-eb140bf95437
+      pretty_name: Generate Access Token
+      options:
+        executor:
+          name: http_request_v_4_30_0
+          env: {}
+          sync: true
+          disable: false
+      manifestId: ee63ad26-cc7c-52b9-8a1d-502da126aec5
+      isPrivate: false
+      isPrivateUrl: true
+      mock_output:
+        enabled: false
+      skip: false
+      retry: {}
+    - name: us-docker.pkg.dev/stackpulse/public/http/request:4.30.0
+      id: request_cve_data_page
+      env:
+        AUTHORIZATION: None
+        BODY: |-
+          {
+            "pagination_key":"{{ $.generate_access_token.api_object.pagination_key }}",
+            "limit": 5,
+            "page_num": 0
+          }
+        CONTENT_TYPE: application/json; charset=utf-8
+        HEADERS: ""
+        METHOD: POST
+        URL: https://hooks.torq.io/v1/webhooks/92634ec9-22cb-48e9-93a9-14650ca8c97b/workflows/eb3dfa21-e459-4033-bc2d-f149c30959d1/sync
+      uuid: b80daf1f-8ada-4f4d-9c05-10c2f70f90c2
+      pretty_name: Request CVE Data page
+      options:
+        executor:
+          name: http_request_v_4_30_0
+          env: {}
+          sync: true
+          disable: false
+      manifestId: ee63ad26-cc7c-52b9-8a1d-502da126aec5
+      isPrivate: false
+      isPrivateUrl: true
+      mock_output:
+        enabled: false
+      skip: false
+      retry: {}
+    - name: us-docker.pkg.dev/stackpulse/public/utils/output_utils/set-variable:2.3.0
+      id: set_variable_next_page_num
+      env:
+        DATA_TYPE: number
+        VALUE_NUMBER: '{{ $.request_cve_data_page.api_object.next_page_num }}'
+        VARIABLE_NAME: next_page_num
+      uuid: e1642c64-96b7-45ed-a13a-3b5def56ebc2
+      pretty_name: Set Variable next_page_num
+      options:
+        executor:
+          name: utils_infrastructure_v_1_41_0
+          env: {}
+          sync: true
+          disable: false
+      manifestId: 7b868a61-a5f1-53a3-ad5a-7c115d591b2e
+      isPrivate: false
+      mock_output:
+        enabled: false
+      skip: false
+      retry: {}
+    - loop:
+        key: page_key
+        value: page_value
+        steps:
+          - collector:
+              id: collect_cve
+              uuid: 28d84864-9df8-48b5-a01e-10aa8f292147
+              pretty_name: Collect_CVE
+              expression: '{{ $.request_cve_data_page.api_object.results }}'
+              flatten: true
+          - if:
+              conditions:
+                or:
+                  - and:
+                      - lvalue: '{{ $.set_variable_next_page_num.next_page_num }}'
+                        operator: NOT_EQUALS
+                        rvalue: "0"
+              then:
+                - name: us-docker.pkg.dev/stackpulse/public/http/request:4.30.0
+                  id: request_cve_data_page
+                  env:
+                    AUTHORIZATION: None
+                    BODY: |-
+                      {
+                        "pagination_key":"{{ $.generate_access_token.api_object.pagination_key }}",
+                        "limit": 5,
+                        "page_num": {{ $.set_variable_next_page_num.next_page_num }}
+                      }
+                    CONTENT_TYPE: application/json; charset=utf-8
+                    HEADERS: ""
+                    METHOD: POST
+                    URL: https://hooks.torq.io/v1/webhooks/92634ec9-22cb-48e9-93a9-14650ca8c97b/workflows/eb3dfa21-e459-4033-bc2d-f149c30959d1/sync
+                  uuid: 419803ee-1518-4e56-94f2-1157d6c29ce3
+                  pretty_name: Request CVE Data page
+                  options:
+                    executor:
+                      name: http_request_v_4_30_0
+                      env: {}
+                      sync: true
+                      disable: false
+                  manifestId: ee63ad26-cc7c-52b9-8a1d-502da126aec5
+                  isPrivate: false
+                  isPrivateUrl: true
+                  mock_output:
+                    enabled: false
+                  skip: false
+                  retry: {}
+                - name: us-docker.pkg.dev/stackpulse/public/utils/output_utils/set-variable:2.3.0
+                  id: set_variable_next_page_num
+                  env:
+                    DATA_TYPE: number
+                    VALUE_NUMBER: '{{ $.request_cve_data_page.api_object.next_page_num }}'
+                    VARIABLE_NAME: next_page_num
+                  uuid: 9c505dde-6790-4554-8a7d-b1ab2987c5cb
+                  pretty_name: Set Variable next_page_num
+                  options:
+                    executor:
+                      name: utils_infrastructure_v_1_41_0
+                      env: {}
+                      sync: true
+                      disable: false
+                  manifestId: 7b868a61-a5f1-53a3-ad5a-7c115d591b2e
+                  isPrivate: false
+                  mock_output:
+                    enabled: false
+                  skip: false
+                  retry: {}
+              else:
+                - break:
+                    pretty_name: Break
+                    uuid: 47ecd9f7-a843-4abf-8103-0f6bb87c6fb4
+              uuid: ea5b89f6-343b-421d-a9a1-c163037c660f
+              pretty_name: If next_page_num is not 0
+        uuid: 61e78610-8a73-4ba6-8850-aeeac0003259
+        pretty_name: Loop
+        until_break: true
+    - name: us-docker.pkg.dev/stackpulse/public/torq_data_transformation/json-transformation-tool:4.1.5
+      id: extract_cves
+      env:
+        INPUT_JSON: '{{ $.collect_cve.result }}'
+        TRANSFORMATION_PLAN: '[{"tool":"jq","command":"[.[] | .cve.CVE_data_meta.ID]","prompt":"Extract only CVEs values \"cve\" : {CVE_data_meta: {\"ID\": }} in an array","modified":false}]'
+      uuid: 49ee3318-9688-4679-a54d-1d8af43f8702
+      pretty_name: Extract CVEs
+      options:
+        executor:
+          name: utils_infrastructure_v_1_43_0
+          env: {}
+          sync: true
+          disable: false
+      manifestId: 474ca7d8-2d19-502c-80fc-472768c97bef
+      isPrivate: false
+      mock_output:
+        enabled: false
+      skip: false
+      retry: {}
+    - name: us-docker.pkg.dev/stackpulse/public/http/request:4.30.0
+      id: validate_results
+      env:
+        AUTHORIZATION: None
+        BODY: |-
+          {
+            "pagination_key":"{{ $.generate_access_token.api_object.pagination_key }}",
+            "validate":"{{ jsonEscape $.extract_cves.output }}"
+          }
+        CONTENT_TYPE: application/json; charset=utf-8
+        HEADERS: ""
+        METHOD: POST
+        URL: https://hooks.torq.io/v1/webhooks/92634ec9-22cb-48e9-93a9-14650ca8c97b/workflows/eb3dfa21-e459-4033-bc2d-f149c30959d1/sync
+      uuid: 359b26e7-56ba-4b6e-a6b9-72dbc00b503e
+      pretty_name: Validate results
+      options:
+        executor:
+          name: http_request_v_4_30_0
+          env: {}
+          sync: true
+          disable: false
+      manifestId: ee63ad26-cc7c-52b9-8a1d-502da126aec5
+      isPrivate: false
+      isPrivateUrl: true
+      mock_output:
+        enabled: false
+      skip: false
+      retry: {}
+    - exit:
+        success: "true"
+        pretty_name: Exit
+        output: '{}'
+        uuid: ff7b1993-ccf3-4a01-a0e1-03806752ae83
+  annotations:
+    - uuid: 776c9975-d318-41cc-b86d-59a192f60309
+      x: -752
+      "y": 60
+      width: 634
+      height: 1442
+      content: '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"image","attrs":{"src":"https://i.imgur.com/g8YWXN5.png","alt":null,"title":null,"width":"60%","height":null,"isDraggable":true,"isResizable":null}}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"}],"text":"Instructions:"}]},{"type":"paragraph","content":[{"type":"text","text":"As a SOC team leader, you have been given access to the latest security tool in the market. The tool gives you an output of CVE data, and your goal is to pull the data from the API using pagination."}]},{"type":"paragraph","content":[{"type":"text","text":"Using the access token API will provide you with a unique pagination key with a unique dataset that is valid for 1 hour.  If you need to start over just call the access token API again."}]},{"type":"paragraph","content":[{"type":"text","text":"At the end of the workflow you will need to send the gathered data back to the API for validation to see if you were able to successfully pull all the results using the validate api call."}]},{"type":"paragraph","content":[{"type":"text","text":"For validation, return an array with the CVE Identifiers that were found for your results set using the validate option in the API.  "}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"}],"text":"Example:"}]},{"type":"paragraph","content":[{"type":"text","text":"[ \"CVE-2023-43777\", \"CVE-2023-27793\", \"CVE-2023-35663\" ]"}]},{"type":"paragraph","content":[{"type":"text","text":"Now all that we need is its API access information which has been provided."}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"}],"text":"Additional Information:"},{"type":"hardBreak"},{"type":"hardBreak"},{"type":"text","marks":[{"type":"bold"},{"type":"underline"}],"text":"Generate Access Token"},{"type":"hardBreak","marks":[{"type":"underline"}]},{"type":"text","text":"HTTP POST to  "},{"type":"text","marks":[{"type":"link","attrs":{"href":"https://hooks.torq.io/v1/webhooks/92634ec9-22cb-48e9-93a9-14650ca8c97b/workflows/eb3dfa21-e459-4033-bc2d-f149c30959d1/sync","target":"_blank","rel":"noopener noreferrer nofollow","class":null}}],"text":"Endpoint"},{"type":"hardBreak","marks":[{"type":"link","attrs":{"href":"https://hooks.torq.io/v1/webhooks/92634ec9-22cb-48e9-93a9-14650ca8c97b/workflows/eb3dfa21-e459-4033-bc2d-f149c30959d1/sync￼","target":"_blank","rel":"noopener noreferrer nofollow","class":null}}]},{"type":"text","text":"Body {\"action\": \"start\"}"}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"italic"}],"text":"Note: Pagination keys are valid for 1 hour."}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"},{"type":"underline"}],"text":"Request Data from API"}]},{"type":"paragraph","content":[{"type":"text","text":"HTTP POST to "},{"type":"text","marks":[{"type":"link","attrs":{"href":"https://hooks.torq.io/v1/webhooks/92634ec9-22cb-48e9-93a9-14650ca8c97b/workflows/eb3dfa21-e459-4033-bc2d-f149c30959d1/sync","target":"_blank","rel":"noopener noreferrer nofollow","class":null}}],"text":"Endpoint"}]},{"type":"paragraph","content":[{"type":"text","text":"Body {"}]},{"type":"paragraph","content":[{"type":"text","text":"  \"pagination_key\": \"<PAGINATION_KEY_FROM_GENERATE_ACCESS_TOKEN>\","}]},{"type":"paragraph","content":[{"type":"text","text":"  \"limit\": <num>,"}]},{"type":"paragraph","content":[{"type":"text","text":"  \"page_num\": <num>"}]},{"type":"paragraph","content":[{"type":"text","text":"} "}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"},{"type":"italic"}],"text":"Request data notes:"}]},{"type":"bulletList","content":[{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","marks":[{"type":"italic"}],"text":"page_num and limit are integers. "}]}]},{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","marks":[{"type":"italic"}],"text":"Pages start at 0."}]}]},{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"It is required to send at least page_num or limit to the API."}]}]},{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"Maximum page size is 20."}]}]},{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"If another page is available the key "},{"type":"text","marks":[{"type":"code"}],"text":"next_page_num "},{"type":"text","text":"will be available in the returned data with the next page number."}]}]}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"},{"type":"underline"}],"text":"Validate your results"},{"type":"hardBreak","marks":[{"type":"underline"}]},{"type":"text","text":"HTTP POST to  "},{"type":"text","marks":[{"type":"link","attrs":{"href":"https://hooks.torq.io/v1/webhooks/92634ec9-22cb-48e9-93a9-14650ca8c97b/workflows/eb3dfa21-e459-4033-bc2d-f149c30959d1/sync","target":"_blank","rel":"noopener noreferrer nofollow","class":null}}],"text":"Endpoint"},{"type":"hardBreak","marks":[{"type":"link","attrs":{"href":"https://hooks.torq.io/v1/webhooks/92634ec9-22cb-48e9-93a9-14650ca8c97b/workflows/eb3dfa21-e459-4033-bc2d-f149c30959d1/sync￼","target":"_blank","rel":"noopener noreferrer nofollow","class":null}}]},{"type":"text","text":"Body {"}]},{"type":"paragraph","content":[{"type":"text","text":"  \"pagination_key\": \"<PAGINATION_KEY_FROM_GENERATE_ACCESS_TOKEN>\","}]},{"type":"paragraph","content":[{"type":"text","text":"  \"validate\": <ARRAY_OF_RESULTS>"}]},{"type":"paragraph","content":[{"type":"text","text":"}"}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"},{"type":"italic"}],"text":"Validate notes:"}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"italic"}],"text":"Make sure to send proper JSON data to the API."}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"italic"}],"text":"Once you validate your results you will receive a response and if the data contains all of the CVE identifiers as shown in the example above, a quick key will be provided."}]}]}'
+    - uuid: 82b973bd-7d56-4f4d-bef6-9b7dd237df70
+      x: 552
+      "y": 69
+      width: 336
+      height: 565
+      content: '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"image","attrs":{"src":"https://i.imgur.com/BIpR1Q5.png","alt":null,"title":null,"width":"60%","height":null,"isDraggable":true,"isResizable":null}}]},{"type":"paragraph","content":[{"type":"text","text":"Try to copy paste the curl bash command into an empty square."},{"type":"hardBreak"},{"type":"hardBreak"},{"type":"text","text":"The HTTP POST command will bring the first page result."},{"type":"hardBreak"},{"type":"hardBreak"},{"type":"text","marks":[{"type":"italic"}],"text":"curl -X POST \""},{"type":"text","marks":[{"type":"link","attrs":{"href":"https://hooks.torq.io/v1/webhooks/92634ec9-22cb-48e9-93a9-14650ca8c97b/workflows/eb3dfa21-e459-4033-bc2d-f149c30959d1/sync","target":"_blank","rel":"noopener noreferrer nofollow","class":null}},{"type":"italic"}],"text":"https://hooks.torq.io/v1/webhooks/92634ec9-22cb-48e9-93a9-14650ca8c97b/workflows/eb3dfa21-e459-4033-bc2d-f149c30959d1/sync"},{"type":"text","marks":[{"type":"italic"}],"text":"\" \\"}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"italic"}],"text":"     -H \"Content-Type: application/json; charset=utf-8\" \\"}]},{"type":"paragraph","content":[{"type":"text","marks":[{"type":"italic"}],"text":"     -d ''{\"action\": \"start\"}''"}]}]}'
+  output_schema: '{}'
+  tags:
+    - Torq Academy - Expert
+  section: Torq Academy
+root: true
