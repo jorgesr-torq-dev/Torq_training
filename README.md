@@ -3,5 +3,5 @@ Welcome to the official repository for Torq Automation Course Solutions! This re
 Our goal is to help you build and understand powerful automations, whether you're a new Automation Analyst or a seasoned Automation Expert.
 
 📖 What's Inside?
-This repository is structured to mirror the official Torq training curriculum. Each folder contains the solution templates for a specific course exam, designed to be imported directly into your Torq environment.
+Each folder contains the solution templates for a specific course exam, designed to be imported directly into your Torq environment.
 
